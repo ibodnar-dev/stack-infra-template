@@ -1,0 +1,39 @@
+replicaCount: 1
+
+image:
+  repository: stack-app-template-dev
+  pullPolicy: IfNotPresent
+  tag: ""  # Defaults to .Chart.AppVersion
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8000
+
+resources:
+  limits:
+    cpu: 100m
+    memory: 128Mi
+  requests:
+    cpu: 50m
+    memory: 64Mi
+
+postgresql:
+  enabled: true
+  postgresHost: postgres
+  postgresPort: 5432
+  postgresDB: stack
+  postgresUser: postgres
+  postgresPassword: postgres
+
+env:
+  - name: POSTGRES_HOST
+    value: "{{ .Values.postgresql.postgresHost }}"
+  - name: POSTGRES_PORT
+    value: "{{ .Values.postgresql.postgresPort }}"
+  - name: POSTGRES_DB
+    value: "{{ .Values.postgresql.postgresDB }}"
+  - name: POSTGRES_USER
+    value: "{{ .Values.postgresql.postgresUser }}"
+  - name: POSTGRES_PASSWORD
+    value: "{{ .Values.postgresql.postgresPassword }}"
