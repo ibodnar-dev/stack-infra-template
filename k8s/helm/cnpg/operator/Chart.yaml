@@ -1,0 +1,10 @@
+apiVersion: v2
+name: cnpg-wrapper
+description: A wrapper Helm chart for CloudNativePG Operator
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+dependencies:
+  - name: cloudnative-pg
+    version: "0.19.1"  # Use the latest version from their repository
+    repository: "https://cloudnative-pg.github.io/charts"

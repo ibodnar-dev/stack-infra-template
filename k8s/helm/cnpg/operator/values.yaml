@@ -1,0 +1,20 @@
+cloudnative-pg:
+  # Example configuration options
+  replicaCount: 1
+
+  image:
+    repository: ghcr.io/cloudnative-pg/cloudnative-pg
+    pullPolicy: IfNotPresent
+    # tag is set by default to the chart appVersion
+
+  resources:
+    limits:
+      cpu: 200m
+      memory: 256Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+  # Set to false if you want to manage CRDs separately
+  crds:
+    create: true
