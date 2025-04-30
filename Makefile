@@ -5,7 +5,9 @@ CLUSTER_NAME := stack
 HELM_CHART_DIR := k8s/helm/app
 HELM_RELEASE_NAME := stack-app
 CNPG_OPERATOR_PATH := k8s/helm/cnpg/operator
+K8S_MANIFESTS_DIR := k8s/manifests
 
+# kind
 kd-create:
 	kind create cluster --name stack
 
@@ -20,7 +22,13 @@ build-app-local-image:
 load-app-local-image:
 	kind load docker-image $(IMAGE_NAME_DEV) --name $(CLUSTER_NAME)
 
-# app
+# app k8s infra
+create-app-ns:
+	kubectl apply -f $(K8S_MANIFESTS_DIR)/ns/dev
+
+create-k8s-infra: create-app-ns
+
+# app helm
 hm-lint:
 	helm lint $(HELM_CHART_DIR)
 
@@ -32,7 +40,6 @@ hm-uninstall:
 
 hm-upgrade:
 	helm upgrade $(HELM_RELEASE_NAME) $(HELM_CHART_DIR)
-
 
 # cnpg
 hm-cnpg-op-update:
