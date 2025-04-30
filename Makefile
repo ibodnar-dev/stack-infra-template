@@ -4,6 +4,7 @@ IMAGE_TAG_DEV := $(IMAGE_NAME_DEV)
 CLUSTER_NAME := stack
 HELM_CHART_DIR := k8s/helm/app
 HELM_RELEASE_NAME := stack-app
+CNPG_OPERATOR_PATH := k8s/helm/cnpg/operator
 
 kd-create:
 	kind create cluster --name stack
@@ -19,7 +20,7 @@ build-app-local-image:
 load-app-local-image:
 	kind load docker-image $(IMAGE_NAME_DEV) --name $(CLUSTER_NAME)
 
-# helm
+# app
 hm-lint:
 	helm lint $(HELM_CHART_DIR)
 
@@ -31,3 +32,16 @@ hm-uninstall:
 
 hm-upgrade:
 	helm upgrade $(HELM_RELEASE_NAME) $(HELM_CHART_DIR)
+
+
+# cnpg
+hm-cnpg-op-update:
+	helm dependency update $(CNPG_OPERATOR_PATH)
+
+# Install CNPG operator
+hm-cnpg-op-install: hm-cnpg-op-update
+	helm install --namespace cnpg-system --create-namespace cnpg-operator $(CNPG_OPERATOR_PATH)
+
+hm-cnpg-uninstall:
+	helm uninstall --namespace cnpg-system cnpg-operator
+	kubectl get crd | grep cnpg | awk '{print $$1}' | xargs kubectl delete crd # uninstall CDRs too, those are cluster-scoped. Also helm has a deletion protection for CDRs
