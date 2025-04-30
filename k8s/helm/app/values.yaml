@@ -1,4 +1,5 @@
 replicaCount: 1
+ns: stack
 
 image:
   repository: stack-app-template-dev
