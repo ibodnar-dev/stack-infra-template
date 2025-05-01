@@ -1,0 +1,75 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: {{ .Values.cluster.name }}
+  namespace: {{ .Values.namespace }}
+spec:
+  instances: {{ .Values.cluster.instances }}
+
+  # PostgreSQL image to use
+  imageName: {{ .Values.cluster.imageName }}
+
+  # Resource requirements
+  resources:
+    {{- toYaml .Values.cluster.resources | nindent 4 }}
+
+  # Storage configuration
+  storage:
+    size: {{ .Values.cluster.storage.size }}
+    storageClass: {{ .Values.cluster.storage.storageClass }}
+
+  # Bootstrap settings for database initialization
+  bootstrap:
+    {{- if .Values.bootstrap.initdb }}
+    initdb:
+      database: {{ .Values.bootstrap.initdb.database }}
+      owner: {{ .Values.bootstrap.initdb.owner }}
+      {{- if .Values.bootstrap.initdb.secret }}
+      secret:
+        name: {{ .Values.bootstrap.initdb.secret.name }}
+      {{- end }}
+    {{- end }}
+
+  # PostgreSQL configuration settings
+  postgresql:
+    {{- if .Values.postgresql.parameters }}
+    parameters:
+      {{- range $key, $value := .Values.postgresql.parameters }}
+      {{ $key }}: {{ $value | quote }}
+      {{- end }}
+    {{- end }}
+
+  # Monitoring configuration
+  monitoring:
+    enablePodMonitor: {{ .Values.cluster.monitoring.enabled }}
+
+  # Backup configuration
+  {{- if .Values.cluster.backup.enabled }}
+  backup:
+    retentionPolicy: {{ .Values.cluster.backup.retentionPolicy }}
+    barmanObjectStore:
+      wal:
+        compression: "gzip"
+        maxParallel: 8
+      destinationPath: "s3://your-bucket/path-to-backups/"
+      endpointURL: "https://s3.amazonaws.com"
+      s3Credentials:
+        accessKeyId:
+          name: backup-creds
+          key: ACCESS_KEY_ID
+        secretAccessKey:
+          name: backup-creds
+          key: ACCESS_SECRET_KEY
+    schedule:
+      cron: {{ .Values.cluster.backup.schedule | quote }}
+  {{- end }}
+
+  # Service configuration
+  {{- if .Values.network }}
+  serviceAccountTemplate:
+    {{- if .Values.network.enableServiceMonitor }}
+    metadata:
+      labels:
+        monitoring: "true"
+    {{- end }}
+  {{- end }}

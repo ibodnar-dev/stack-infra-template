@@ -1,0 +1,6 @@
+apiVersion: v2
+name: cnpg-cluster
+description: Helm chart for CloudNativePG cluster deployment
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

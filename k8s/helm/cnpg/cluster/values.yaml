@@ -1,0 +1,41 @@
+# yaml-language-server: $schema=./schema.json
+
+namespace: stack
+
+cluster:
+  name: postgres
+  instances: 1
+  resources:
+    limits:
+      cpu: "1"
+      memory: "1Gi"
+    requests:
+      cpu: "500m"
+      memory: "500Mi"
+  storage:
+    size: "1Gi"
+    storageClass: "standard"
+  imageName: "ghcr.io/cloudnative-pg/postgresql:17"
+  backup:
+    enabled: false
+
+  monitoring:
+    enabled: false
+
+bootstrap:
+  initdb:
+    database: stack
+    owner: postgres
+    secret:
+      name: stack-postgres-credentials
+
+postgresql:
+  parameters:
+    max_connections: "100"
+    shared_buffers: "256MB"
+
+
+
+
+
+
