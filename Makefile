@@ -5,6 +5,8 @@ CLUSTER_NAME := stack
 HELM_CHART_DIR := k8s/helm/app
 HELM_RELEASE_NAME := stack-app
 CNPG_OPERATOR_PATH := k8s/helm/cnpg/operator
+CNPG_CLUSTER_PATH := k8s/helm/cnpg/cluster
+CNPG_CLUSTER_RELEASE_NAME := postgres-cluster
 K8S_MANIFESTS_DIR := k8s/manifests
 
 # kind
@@ -22,11 +24,14 @@ build-app-local-image:
 load-app-local-image:
 	kind load docker-image $(IMAGE_NAME_DEV) --name $(CLUSTER_NAME)
 
-# app k8s infra
-create-app-ns:
+# k8s infra
+create-ns:
 	kubectl apply -f $(K8S_MANIFESTS_DIR)/ns/dev
 
-create-k8s-infra: create-app-ns
+create-secrets:
+	kubectl apply -f $(K8S_MANIFESTS_DIR)/secrets/dev
+
+create-k8s-infra: create-ns
 
 # app helm
 hm-lint:
@@ -52,3 +57,17 @@ hm-cnpg-op-install: hm-cnpg-op-update
 hm-cnpg-uninstall:
 	helm uninstall --namespace cnpg-system cnpg-operator
 	kubectl get crd | grep cnpg | awk '{print $$1}' | xargs kubectl delete crd # uninstall CDRs too, those are cluster-scoped. Also helm has a deletion protection for CDRs
+
+# cnpg cluster
+hm-cnpg-cluster-lint:
+	helm lint $(CNPG_CLUSTER_PATH)
+
+hm-cnpg-cluster-install:
+	kubectl apply -f $(K8S_MANIFESTS_DIR)/secrets/dev/postgres-credentials.yaml -n stack
+	helm install $(CNPG_CLUSTER_RELEASE_NAME) $(CNPG_CLUSTER_PATH) -n stack
+
+hm-cnpg-cluster-uninstall:
+	helm uninstall $(CNPG_CLUSTER_RELEASE_NAME) -n stack
+
+hm-cnpg-cluster-upgrade:
+	helm upgrade $(CNPG_CLUSTER_RELEASE_NAME) $(CNPG_CLUSTER_PATH) -n stack
