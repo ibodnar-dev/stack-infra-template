@@ -25,7 +25,20 @@ spec:
             - name: http
               containerPort: 8000
               protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: {{ include "stack-app.fullname" . }}-config
           env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.postgresql.credentialsSecret | default "stack-postgres-credentials" }}
+                  key: username
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.postgresql.credentialsSecret | default "stack-postgres-credentials" }}
+                  key: password
             {{- range .Values.env }}
             - name: {{ .name }}
               value: {{ .value | quote }}

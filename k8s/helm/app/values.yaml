@@ -20,21 +20,12 @@ resources:
     memory: 64Mi
 
 postgresql:
-  enabled: true
-  postgresHost: postgres
-  postgresPort: 5432
-  postgresDB: stack
-  postgresUser: postgres
-  postgresPassword: postgres
+  host: ""  # Default is constructed using clusterName below
+  port: 5432
+  database: stack
 
-env:
-  - name: POSTGRES_HOST
-    value: "{{ .Values.postgresql.postgresHost }}"
-  - name: POSTGRES_PORT
-    value: "{{ .Values.postgresql.postgresPort }}"
-  - name: POSTGRES_DB
-    value: "{{ .Values.postgresql.postgresDB }}"
-  - name: POSTGRES_USER
-    value: "{{ .Values.postgresql.postgresUser }}"
-  - name: POSTGRES_PASSWORD
-    value: "{{ .Values.postgresql.postgresPassword }}"
+  # CloudNativePG-specific settings
+  clusterName: postgres
+  credentialsSecret: stack-postgres-credentials
+
+env: []

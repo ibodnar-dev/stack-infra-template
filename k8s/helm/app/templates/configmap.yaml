@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "stack-app.fullname" . }}-config
+  namespace: {{ .Values.ns }}
+  labels:
+    {{- include "stack-app.labels" . | nindent 4 }}
+data:
+  POSTGRES_HOST: {{ .Values.postgresql.host | default (printf "%s-rw.%s.svc.cluster.local" .Values.postgresql.clusterName .Values.ns) | quote }}
+  POSTGRES_PORT: {{ .Values.postgresql.port | default "5432" | quote }}
+  POSTGRES_DB: {{ .Values.postgresql.database | quote }}
