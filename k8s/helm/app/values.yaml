@@ -7,7 +7,7 @@ image:
   tag: ""  # Defaults to .Chart.AppVersion
 
 service:
-  type: ClusterIP
+  type: LoadBalancer
   port: 80
   targetPort: 8000
 
