@@ -8,6 +8,9 @@ CNPG_OPERATOR_PATH := k8s/helm/cnpg/operator
 CNPG_CLUSTER_PATH := k8s/helm/cnpg/cluster
 CNPG_CLUSTER_RELEASE_NAME := postgres-cluster
 K8S_MANIFESTS_DIR := k8s/manifests
+ENVOY_GATEWAY_PATH := k8s/helm/envoy-gateway
+ENVOY_GATEWAY_RELEASE_NAME := envoy-gateway
+ENVOY_GATEWAY_URI := oci://docker.io/envoyproxy/gateway-helm
 
 # kind
 kd-create:
@@ -24,6 +27,7 @@ build-app-local-image:
 load-app-local-image:
 	kind load docker-image $(IMAGE_NAME_DEV) --name $(CLUSTER_NAME)
 
+
 # k8s infra
 create-ns:
 	kubectl apply -f $(K8S_MANIFESTS_DIR)/ns/dev
@@ -32,6 +36,7 @@ create-secrets:
 	kubectl apply -f $(K8S_MANIFESTS_DIR)/secrets/dev
 
 create-k8s-infra: create-ns
+
 
 # app helm
 hm-lint:
@@ -45,6 +50,7 @@ hm-uninstall:
 
 hm-upgrade:
 	helm upgrade $(HELM_RELEASE_NAME) $(HELM_CHART_DIR)
+
 
 # cnpg
 hm-cnpg-op-update:
@@ -71,3 +77,31 @@ hm-cnpg-cluster-uninstall:
 
 hm-cnpg-cluster-upgrade:
 	helm upgrade $(CNPG_CLUSTER_RELEASE_NAME) $(CNPG_CLUSTER_PATH) -n stack
+
+
+# envoy gateway
+
+hm-envoy-install-dev:
+	helm install $(ENVOY_GATEWAY_RELEASE_NAME) $(ENVOY_GATEWAY_URI) \
+		--namespace envoy-gateway-system \
+		--create-namespace \
+		-f $(ENVOY_GATEWAY_PATH)/values.dev.yaml
+
+hm-envoy-install-prod:
+	helm install $(ENVOY_GATEWAY_RELEASE_NAME) $(ENVOY_GATEWAY_URI) \
+		--namespace envoy-gateway-system \
+		--create-namespace \
+		-f $(ENVOY_GATEWAY_PATH)/values.prod.yaml
+
+hm-envoy-uninstall:
+	helm uninstall $(ENVOY_GATEWAY_RELEASE_NAME) --namespace envoy-gateway-system
+
+hm-envoy-upgrade-dev:
+	helm upgrade $(ENVOY_GATEWAY_RELEASE_NAME) $(ENVOY_GATEWAY_URI) \
+		--namespace envoy-gateway-system \
+		-f $(ENVOY_GATEWAY_PATH)/values.dev.yaml
+
+hm-envoy-upgrade-prod:
+	helm upgrade $(ENVOY_GATEWAY_RELEASE_NAME) $(ENVOY_GATEWAY_URI) \
+		--namespace envoy-gateway-system \
+		-f $(ENVOY_GATEWAY_PATH)/values.prod.yaml
