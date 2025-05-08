@@ -10,3 +10,6 @@ venv/
 ## helm
 # Chart dependencies
 **/charts/*.tgz
+
+## project
+/temp
