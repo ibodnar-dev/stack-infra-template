@@ -1,0 +1,37 @@
+gateway-helm:
+  # Namespace where Envoy Gateway will be installed
+  namespace: envoy-gateway-system
+
+  # Deployment configuration
+  deployment:
+    replicas: 1
+
+    # Resource settings for the Envoy Gateway controller
+    envoyGateway:
+      resources:
+        limits:
+          cpu: 500m
+          memory: 512Mi
+        requests:
+          cpu: 200m
+          memory: 256Mi
+
+  # Gateway controller configuration
+  config:
+    envoyGateway:
+      gateway:
+        controllerName: gateway.envoyproxy.io/gatewayclass-controller
+
+      # Logging configuration
+      logging:
+        level:
+          default: info
+
+      # Provider configuration
+      provider:
+        type: Kubernetes
+        kubernetes: {}
+
+  # Service configuration
+  service:
+    type: LoadBalancer

@@ -1,0 +1,5 @@
+gateway-helm:
+  service:
+    annotations:
+    # Add any cloud provider-specific annotations as needed
+    service.beta.kubernetes.io/aws-load-balancer-type: nlb
