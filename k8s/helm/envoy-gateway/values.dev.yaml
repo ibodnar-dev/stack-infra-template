@@ -1,4 +1,0 @@
-gateway-helm:
-  service:
-    annotations:
-      metallb.universe.tf/address-pool: "default"
