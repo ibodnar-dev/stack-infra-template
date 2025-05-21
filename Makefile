@@ -1,17 +1,20 @@
 APP_REPO_DIRECTORY := ../stack-app-template
+APP_NS := app
 IMAGE_NAME_DEV := stack-app-template-dev
 IMAGE_TAG_DEV := $(IMAGE_NAME_DEV)
 CLUSTER_NAME := stack
 HELM_CHART_DIR := k8s/helm/app
-HELM_RELEASE_NAME := stack-app
+HELM_RELEASE_NAME := app
 CNPG_OPERATOR_PATH := k8s/helm/cnpg/operator
 CNPG_CLUSTER_PATH := k8s/helm/cnpg/cluster
 CNPG_CLUSTER_RELEASE_NAME := postgres-cluster
 K8S_MANIFESTS_DIR := k8s/manifests
-GATEWAY_PATH := k8s/helm/envoy-gateway
+GATEWAY_PATH := k8s/helm/gateway
 EG_RELEASE_NAME := envoy-gateway
 EG_URI := oci://docker.io/envoyproxy/gateway-helm
 EG_NS := envoy-gateway-system
+KG_RELEASE_NAME := k8s-gateway
+KG_NS := app
 
 
 # kind
@@ -35,30 +38,12 @@ create-ns:
 	kubectl apply -f $(K8S_MANIFESTS_DIR)/ns/dev
 
 create-secrets:
-	kubectl apply -f $(K8S_MANIFESTS_DIR)/secrets/dev
+	kubectl apply -f $(K8S_MANIFESTS_DIR)/secrets/dev -n $(APP_NS)
 
-create-k8s-infra: create-ns
-
-
-# app helm
-hm-lint:
-	helm lint $(HELM_CHART_DIR)
-
-hm-install:
-	helm install $(HELM_RELEASE_NAME) $(HELM_CHART_DIR)
-
-hm-uninstall:
-	helm uninstall $(HELM_RELEASE_NAME)
-
-hm-upgrade:
-	helm upgrade $(HELM_RELEASE_NAME) $(HELM_CHART_DIR)
+create-k8s-infra: create-ns create-secrets
 
 
-# cnpg
-cnpg-op-update:
-	helm dependency update $(CNPG_OPERATOR_PATH)
-
-# Install CNPG operator
+# cnpg operator
 cnpg-op-install: cnpg-op-update
 	helm install --namespace cnpg-system --create-namespace cnpg-operator $(CNPG_OPERATOR_PATH)
 
@@ -66,26 +51,44 @@ cnpg-uninstall:
 	helm uninstall --namespace cnpg-system cnpg-operator
 	kubectl get crd | grep cnpg | awk '{print $$1}' | xargs kubectl delete crd # uninstall CDRs too, those are cluster-scoped. Also helm has a deletion protection for CDRs
 
+cnpg-op-update:
+	helm dependency update $(CNPG_OPERATOR_PATH)
+
+
 # cnpg cluster
 cnpg-cluster-lint:
 	helm lint $(CNPG_CLUSTER_PATH)
 
 cnpg-cluster-install:
-	kubectl apply -f $(K8S_MANIFESTS_DIR)/secrets/dev/postgres-credentials.yaml -n stack
-	helm install $(CNPG_CLUSTER_RELEASE_NAME) $(CNPG_CLUSTER_PATH) -n stack
+	kubectl apply -f $(K8S_MANIFESTS_DIR)/secrets/dev/postgres-credentials.yaml -n $(APP_NS)
+	helm install $(CNPG_CLUSTER_RELEASE_NAME) $(CNPG_CLUSTER_PATH) -n $(APP_NS)
 
 cnpg-cluster-uninstall:
-	helm uninstall $(CNPG_CLUSTER_RELEASE_NAME) -n stack
+	helm uninstall $(CNPG_CLUSTER_RELEASE_NAME) -n $(APP_NS)
 
 cnpg-cluster-upgrade:
-	helm upgrade $(CNPG_CLUSTER_RELEASE_NAME) $(CNPG_CLUSTER_PATH) -n stack
+	helm upgrade -f $(CNPG_CLUSTER_PATH)/values.yaml $(CNPG_CLUSTER_RELEASE_NAME) $(CNPG_CLUSTER_PATH) -n $(APP_NS)
+
+
+# app helm
+app-lint:
+	helm lint $(HELM_CHART_DIR)
+
+app-install:
+	helm install $(HELM_RELEASE_NAME) $(HELM_CHART_DIR) -n $(APP_NS)
+
+app-uninstall:
+	helm uninstall $(HELM_RELEASE_NAME) -n $(APP_NS)
+
+app-upgrade:
+	helm upgrade -f $(HELM_CHART_DIR)/values.yaml $(HELM_RELEASE_NAME) $(HELM_CHART_DIR) -n $(APP_NS)
 
 
 # envoy gateway
 eg-install-dev:
 	helm install $(EG_RELEASE_NAME) $(EG_URI) \
 		--version v0.0.0-latest \
-		--namespace $(EG_NS) \
+		-n $(EG_NS) \
 		--create-namespace \
 		-f $(GATEWAY_PATH)/envoy-gateway/values.yaml
 
@@ -96,4 +99,18 @@ eg-upgrade-dev:
 		-f $(GATEWAY_PATH)/envoy-gateway/values.yaml
 
 eg-uninstall:
-	helm uninstall $(EG_RELEASE_NAME) --namespace $(EG_NS)
+	helm uninstall $(EG_RELEASE_NAME) -n $(EG_NS)
+
+# k8s gateway
+kg-install-dev:
+	helm install $(KG_RELEASE_NAME) $(GATEWAY_PATH)/k8s-gateway\
+		-n $(APP_NS) \
+		-f $(GATEWAY_PATH)/k8s-gateway/values.yaml
+
+kg-upgrade-dev:
+	helm upgrade $(KG_RELEASE_NAME) $(GATEWAY_PATH)/k8s-gateway \
+		-n $(APP_NS) \
+		-f $(GATEWAY_PATH)/k8s-gateway/values.yaml
+
+kg-uninstall:
+	helm uninstall $(KG_RELEASE_NAME) -n $(APP_NS)
