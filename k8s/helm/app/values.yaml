@@ -1,5 +1,5 @@
 replicaCount: 1
-ns: stack
+ns: app
 
 image:
   repository: stack-app-template-dev
@@ -22,10 +22,10 @@ resources:
 postgresql:
   host: ""  # Default is constructed using clusterName below
   port: 5432
-  database: stack
+  database: app
 
   # CloudNativePG-specific settings
   clusterName: postgres
-  credentialsSecret: stack-postgres-credentials
+  credentialsSecret: postgres-credentials
 
 env: []

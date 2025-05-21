@@ -32,12 +32,12 @@ spec:
             - name: POSTGRES_USER
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.postgresql.credentialsSecret | default "stack-postgres-credentials" }}
+                  name: {{ .Values.postgresql.credentialsSecret | default "postgres-credentials" }}
                   key: username
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.postgresql.credentialsSecret | default "stack-postgres-credentials" }}
+                  name: {{ .Values.postgresql.credentialsSecret | default "postgres-credentials" }}
                   key: password
             {{- range .Values.env }}
             - name: {{ .name }}

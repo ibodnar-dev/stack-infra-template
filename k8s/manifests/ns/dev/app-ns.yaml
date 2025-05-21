@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: stack
+  name: app
   labels:
-    name: stack
+    name: app
     environment: dev

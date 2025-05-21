@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=./schema.json
 
-namespace: stack
+namespace: app
 
 cluster:
   name: postgres
@@ -24,10 +24,10 @@ cluster:
 
 bootstrap:
   initdb:
-    database: stack
-    owner: postgres
+    database: app
+    owner: app
     secret:
-      name: stack-postgres-credentials
+      name: postgres-credentials
 
 postgresql:
   parameters:
